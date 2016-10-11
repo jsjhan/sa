@@ -3,9 +3,9 @@ show_url () {
     page=$1
     content=$(w3m -dump "$1")
     if [ -z $page ] || [ -z $content ];then
-        dialog --title "$Browser" --msgbox 'page not found' 200 200
+        dialog --title "$Browser" --msgbox 'page not found' 200 200 2> ~/.mybrowser/error
     else
-        dialog --title "$Browser" --msgbox "$content" 200 200
+        dialog --title "$Browser" --msgbox "$content" 200 200 2> ~/.mybrowser/error
     fi
 }
 homepage=www.google.com
@@ -32,6 +32,9 @@ if [ $out -eq 0 ];then
             out=$?
             if [ $out -eq 1 ];then
                 break
+            fi
+            if [ ${#input} -eq 0 ];then
+                continue
             fi
 
             #parse command or url
@@ -79,15 +82,14 @@ if [ $out -eq 0 ];then
 
                     links="$( echo "$urls" | awk '{printf("%d;%s;", NR, $0)}')"
                     IFS=$';'
-                    res="$( dialog --title "$Browser" --menu "Links"  200  200  150 $links  --output-fd 1 )"
+                    res="$( dialog --title "$Browser" --menu "Links"  200  200  150 $links  --output-fd 1 2> ~/.mybrowser/error )"
                     IFS=$oldifs
                     out=$?
                     if [ $out -eq 1 ];then
                         continue
                     fi
-                    cmd=";$res;[^;]*[^;]"
-
-                    show_url $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 3 )
+                    cmd="$res;[^;]*[^;]"
+                    show_url $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 2 )
                     
                 fi
 
@@ -133,12 +135,12 @@ if [ $out -eq 0 ];then
                     if [ $out -eq 1 ];then
                         continue
                     fi
-                    cmd=";$res;[^;]*[^;]"
+                    cmd="$res;[^;]*[^;]"
                     dir=$HOME"/Downloads"
                     if [ ! -d "$dir" ]; then
                         mkdir -p "$dir"
                     fi
-                    wget -c -b -q -P ~/Downloads/ $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 3 )
+                    wget -c -b -q -P ~/Downloads/ $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 2 )
                 fi
 
                 #/B or /bookmark
@@ -171,7 +173,7 @@ if [ $out -eq 0 ];then
                 fi
             elif [ "$(echo $input | head -c 1)" = "!" ];then
                 pre=${input#!}
-                cmd_output=$("$pre")
+                cmd_output=$(""$pre"" 2>&1"")
                 dialog --title "$Browser" --msgbox "$cmd_output" 200 200
             else
                 show_url $input
