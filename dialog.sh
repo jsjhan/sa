@@ -44,10 +44,10 @@ if [ $out -eq 0 ];then
                 #/S or /source
                 if [ "$pre" = "S" ] || [ "$pre" = "source" ];then
                     dialog --title "$Browser" --msgbox "$(curl -s -L "$page")" 200 200
-                fi
+                
 
                 #/L or /link
-                if [ "$pre" = "L" ] || [ "$pre" = "link" ];then
+                elif [ "$pre" = "L" ] || [ "$pre" = "link" ];then
                     cmd="<a href=\".*[^\"]"
                     url=$(curl -s -L "$page" |grep -o "$cmd" | cut -d '"' -f 2)
                     urls=''
@@ -91,10 +91,10 @@ if [ $out -eq 0 ];then
                     cmd="$res;[^;]*[^;]"
                     show_url $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 2 )
                     
-                fi
+                
 
                 #/D or /download
-                if [ "$pre" = "D" ] || [ "$pre" = "download" ];then
+                elif [ "$pre" = "D" ] || [ "$pre" = "download" ];then
                     cmd="<a href=\".*[^\"]"
                     url=$(curl -s -L "$page" |grep -o "$cmd" | cut -d '"' -f 2)
                     urls=''
@@ -141,10 +141,10 @@ if [ $out -eq 0 ];then
                         mkdir -p "$dir"
                     fi
                     wget -c -b -q -P ~/Downloads/ $(echo "$links" | grep -o "$cmd" | cut -d ';' -f 2 )
-                fi
+                
 
                 #/B or /bookmark
-                if [ "$pre" = "B" ] || [ "$pre" = "bookmark" ];then
+                elif [ "$pre" = "B" ] || [ "$pre" = "bookmark" ];then
                     bookmark="$(printf 'Add_a_bookmark\nDelete_a_bookmark\n' |cat - ~/.mybrowser/bookmark | awk '{printf("%10d %s ", NR, $0)}')"
                     res="$(dialog --title "$Browser" --menu "Bookmarks" 200 200 150 $bookmark --output-fd 1)"
                     out=$?
@@ -164,12 +164,14 @@ if [ $out -eq 0 ];then
                         cmd=" $res [^ ]*[^ ]"
                         show_url $(echo "$bookmark" | grep -o "$cmd"| cut -d ' ' -f 3 )
                     fi
-                fi
+                
 
                 #/H or /help
-                if [ "$pre" = "H" ] || [ "$pre" = "help" ];then
+                elif [ "$pre" = "H" ] || [ "$pre" = "help" ];then
                     help=$(cat ~/.mybrowser/help)
                     dialog --title "$Browser" --msgbox "$help" 200 200
+                else
+                    dialog --title "$Browser" --msgbox "Invalid Input\nTry /H for help messages" 200 200
                 fi
             elif [ "$(echo $input | head -c 1)" = "!" ];then
                 pre=${input#!}
